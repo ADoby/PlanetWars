@@ -74,10 +74,17 @@ public class EntityMediator : SimpleMediator
     public Vector3 rotateBy;
     public int Direction = 1;
 
+    private int counter = 0;
+
     private void MoveAroundPlanet()
     {
         if (View.Rigid.isKinematic)
             return;
+
+        counter++;
+        if (counter < 5)
+            return;
+        counter = 0;
         Vector3 toPlanet = (Target.position - View.ConnectedPlanet.Target.position) * Direction;
         direction = Vector3.Cross(toPlanet, Vector3.forward);
 

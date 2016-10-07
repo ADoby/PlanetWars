@@ -24,14 +24,14 @@ public class EntityPartView : SimpleView
         SetScale(Vector3.zero);
     }
 
-    private Rigidbody2D rigid;
+    private Rigidbody rigid;
 
-    public Rigidbody2D Rigid
+    public Rigidbody Rigid
     {
         get
         {
             if (rigid == null)
-                rigid = GetComponent<Rigidbody2D>();
+                rigid = GetComponent<Rigidbody>();
             return rigid;
         }
         set
