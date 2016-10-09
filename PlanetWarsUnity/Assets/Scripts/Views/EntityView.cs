@@ -10,6 +10,8 @@ public enum EntityStates
 
 public class EntityView : SimpleView
 {
+    public int Player = 0;
+
     public PlanetView ConnectedPlanet;
 
     public List<EntityPartView> Parts;
@@ -20,27 +22,41 @@ public class EntityView : SimpleView
     public float CollisionIgnoreTime = 0.5f;
     public float ForceToRadius = 1f;
 
-    public Collider2D Collider;
+    public int UpdateEveryXFrame = 2;
+    public Collider Collider;
+
+    public float AggroRange = 1f;
+    public float AttackCooldown = 1f;
+
+    public float Health = 100f;
+
+    public VoidSignal DiedSignal;
+    public List<EntityView> Enemies;
 
     public override void Init()
     {
         base.Init();
+        DiedSignal = new VoidSignal();
+        Enemies = new List<EntityView>();
     }
 
-    private Rigidbody2D rigid;
-
-    public Rigidbody2D Rigid
+    public bool IsDead
     {
         get
         {
-            if (rigid == null)
-                rigid = GetComponent<Rigidbody2D>();
-            return rigid;
+            return Health <= 0f;
         }
-        set
-        {
-            rigid = value;
-        }
+    }
+
+    public void DoDamage(float damage)
+    {
+        if (IsDead)
+            return;
+        if (damage < 0)
+            return;
+        Health = Mathf.Max(Health - damage, 0f);
+        if (IsDead)
+            DiedSignal.Dispatch();
     }
 
     public void SetPhysicsEnabled(bool value)
@@ -63,5 +79,21 @@ public class EntityView : SimpleView
     {
         transform.localPosition = Vector3.zero;
         transform.localRotation = Quaternion.identity;
+    }
+
+    private EntityView enemy;
+
+    public void OnTriggerEnter(Collider other)
+    {
+        enemy = other.GetComponent<EntityView>();
+        if (enemy != null && !enemy.IsDead && enemy.Player != Player && !Enemies.Contains(enemy))
+            Enemies.Add(enemy);
+    }
+
+    public void OnTriggerExit(Collider other)
+    {
+        enemy = other.GetComponent<EntityView>();
+        if (enemy != null && Enemies.Contains(enemy))
+            Enemies.Remove(enemy);
     }
 }

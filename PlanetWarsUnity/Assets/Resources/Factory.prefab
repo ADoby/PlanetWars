@@ -20,6 +20,7 @@ GameObject:
   m_Component:
   - 4: {fileID: 4000012677269424}
   - 212: {fileID: 212000010127910442}
+  - 65: {fileID: 65000013886728800}
   m_Layer: 8
   m_Name: EngineFactory
   m_TagString: Untagged
@@ -51,6 +52,7 @@ GameObject:
   m_Component:
   - 4: {fileID: 4000010674343820}
   - 212: {fileID: 212000013942126542}
+  - 65: {fileID: 65000013264719558}
   m_Layer: 8
   m_Name: WeaponFactory
   m_TagString: Untagged
@@ -67,6 +69,7 @@ GameObject:
   m_Component:
   - 4: {fileID: 4000010423099984}
   - 114: {fileID: 114000011177142552}
+  - 54: {fileID: 54000013901652356}
   m_Layer: 8
   m_Name: Factory
   m_TagString: Untagged
@@ -83,6 +86,7 @@ GameObject:
   m_Component:
   - 4: {fileID: 4000010067009268}
   - 212: {fileID: 212000010959123886}
+  - 65: {fileID: 65000010722038772}
   m_Layer: 8
   m_Name: BodyFactory
   m_TagString: Untagged
@@ -99,6 +103,7 @@ GameObject:
   m_Component:
   - 4: {fileID: 4000010506829132}
   - 212: {fileID: 212000013549639928}
+  - 65: {fileID: 65000012722784988}
   m_Layer: 8
   m_Name: 128x128
   m_TagString: Untagged
@@ -189,6 +194,69 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4000010423099984}
   m_RootOrder: 3
+--- !u!54 &54000013901652356
+Rigidbody:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000012122218168}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 56
+  m_CollisionDetection: 0
+--- !u!65 &65000010722038772
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000012993305798}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 0.2}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &65000012722784988
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000014020822910}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 0.2}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &65000013264719558
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000011999266926}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 0.2}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &65000013886728800
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000010609557546}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 0.2}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &114000011177142552
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -223,7 +291,7 @@ MonoBehaviour:
   WeaponFactory: {fileID: 4000010674343820}
   EngineFactory: {fileID: 4000012677269424}
   ShipPosition: {fileID: 4000011062014768}
-  BuildTime: 0.15
+  BuildTime: 2
   BuildCurve:
     serializedVersion: 2
     m_Curve:
@@ -240,7 +308,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
-  MoveTime: 0.1
+  MoveTime: 0.25
   MoveCurve:
     serializedVersion: 2
     m_Curve:

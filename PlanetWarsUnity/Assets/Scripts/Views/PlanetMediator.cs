@@ -20,6 +20,9 @@ public class PlanetMediator : SimpleMediator
             direction = 1;
         else
             direction = -1;
+
+        Updater.UpdateCallback -= Updated;
+        Updater.UpdateCallback += Updated;
     }
 
     private Transform Target
@@ -32,9 +35,9 @@ public class PlanetMediator : SimpleMediator
 
     private int direction = 0;
 
-    private void Update()
+    private void Updated(float deltaTime)
     {
-        Target.Rotate(Vector3.forward * Time.deltaTime * View.RotationSpeed * direction);
+        Target.Rotate(Vector3.forward * deltaTime * View.RotationSpeed * direction);
     }
 
     private void PlanetConnectionAdded(PlanetView other)

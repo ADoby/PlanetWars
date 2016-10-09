@@ -7,10 +7,15 @@ public class FactoryMediator : SimpleMediator
     [Inject]
     public FactoryView View { get; set; }
 
+    [Inject]
+    public EntityDiedSignal EntityDiedSignal { get; set; }
+
     public override void OnRegister()
     {
         base.OnRegister();
         View.Init();
+
+        EntityDiedSignal.AddListener(FreeEntity);
     }
 
     private bool CreatingShip = false;
@@ -29,7 +34,10 @@ public class FactoryMediator : SimpleMediator
             return;
         if (!CreatingShip)
         {
+            if (!View.ConnectedPlanet.HasEntitySpace)
+                return;
             CreatingShip = true;
+            View.ConnectedPlanet.PlannedEntities++;
             StartCoroutine(StartCreatingShip());
             return;
         }
@@ -57,6 +65,8 @@ public class FactoryMediator : SimpleMediator
         if (currentBody == null && currentWeapon == null && currentEngine == null)
         {
             //Finished
+            View.ConnectedPlanet.PlannedEntities--;
+            View.ConnectedPlanet.AddEntity(entity);
             entity.SetParent(null, false);
             entity.SetPhysicsEnabled(true);
             entity = null;
@@ -99,6 +109,12 @@ public class FactoryMediator : SimpleMediator
     {
         if (part == null)
             return true;
+
+        if (part.BuildTimer >= BuildTime)
+            return true;
+
+        part.SetPosition(part.StartTarget.position);
+
         part.BuildTimer = Mathf.Min(part.BuildTimer + Time.deltaTime, BuildTime);
 
         part.SetScale(Vector3.one * View.BuildCurve.Evaluate(part.BuildTimer / BuildTime));
@@ -117,18 +133,43 @@ public class FactoryMediator : SimpleMediator
         return part.MoveTimer >= MoveTime;
     }
 
+    private static Queue<EntityView> FreeEntities = new Queue<EntityView>();
+
+    public static void FreeEntity(EntityView entity)
+    {
+        if (FreeEntities.Contains(entity))
+            return;
+        FreeEntities.Enqueue(entity);
+    }
+
     private IEnumerator StartCreatingShip()
     {
-        var loading = Resources.LoadAsync<GameObject>("Ship");
-        yield return loading;
+        if (FreeEntities.Count == 0)
+        {
+            var loading = Resources.LoadAsync<GameObject>("Ship");
+            yield return loading;
 
-        GameObject go = Object.Instantiate(loading.asset) as GameObject;
+            GameObject go = Object.Instantiate(loading.asset) as GameObject;
 
-        go.transform.localScale = Vector3.one;
+            entity = go.GetComponent<EntityView>();
+        }
+        else
+        {
+            entity = FreeEntities.Dequeue();
+            entity.gameObject.SetActive(true);
+        }
 
-        entity = go.GetComponent<EntityView>();
+        entity.transform.localScale = Vector3.one;
+
         entity.SetParent(View.ShipPosition);
         entity.ConnectedPlanet = View.ConnectedPlanet;
+        entity.Player = entity.ConnectedPlanet.Player;
+        entity.Health = 20;
+
+        for (int i = 0; i < entity.Parts.Count; i++)
+        {
+            entity.Parts[i].SetScale(Vector3.zero);
+        }
 
         yield return null;
         entity.ResetPositionAndRotation();

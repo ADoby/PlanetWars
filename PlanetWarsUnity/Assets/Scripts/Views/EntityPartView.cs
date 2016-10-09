@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using strange.extensions.signal.impl;
+using System.Collections;
 using UnityEngine;
 
 public enum PartTypes
@@ -17,27 +18,27 @@ public class EntityPartView : SimpleView
     public Transform StartTarget;
     public Transform EndTarget;
 
+    [Header("Weapon")]
+    public float Damage = 1;
+
+    public LineRenderer Laser;
+    private GameObject laserObject;
+
     public override void Init()
     {
         base.Init();
 
-        SetScale(Vector3.zero);
+        if (Laser != null)
+            laserObject = Laser.gameObject;
     }
 
-    private Rigidbody rigid;
-
-    public Rigidbody Rigid
+    public void Shoot(EntityView other)
     {
-        get
-        {
-            if (rigid == null)
-                rigid = GetComponent<Rigidbody>();
-            return rigid;
-        }
-        set
-        {
-            rigid = value;
-        }
+        //Laser.SetPosition(0, transform.position);
+        Laser.SetPosition(1, transform.InverseTransformPoint(other.transform.position));
+
+        other.DoDamage(Damage);
+        laserObject.SetActive(true);
     }
 
     public void SetPhysicsEnabled(bool value)

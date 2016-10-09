@@ -10,6 +10,12 @@ public class ClickPlanetMediator : SimpleMediator
     public PlanetClickedSignal PlanetClickedSignal { get; set; }
 
     [Inject]
+    public OnPlanetHoverSignal OnPlanetHoverSignal { get; set; }
+
+    [Inject]
+    public OnPlanetExitSignal OnPlanetExitSignal { get; set; }
+
+    [Inject]
     public AppModell AppModell { get; set; }
 
     public override void OnRegister()
@@ -23,8 +29,20 @@ public class ClickPlanetMediator : SimpleMediator
         base.OnRemove();
     }
 
+    private void OnMouseEnter()
+    {
+        OnPlanetHoverSignal.Dispatch(View.Planet);
+    }
+
+    private void OnMouseExit()
+    {
+        OnPlanetExitSignal.Dispatch(View.Planet);
+    }
+
     private void OnMouseDown()
     {
+        if (AppModell.CurrentlyMoving)
+            return;
         OnPlanetClicked();
     }
 

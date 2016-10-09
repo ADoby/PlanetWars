@@ -5,6 +5,8 @@ using UnityEngine.Events;
 
 public class PlanetView : SimpleView
 {
+    public int Player = 0;
+
     public List<Transform> BuildingPositions;
 
     public List<PlanetView> ConnectedPlanets;
@@ -15,6 +17,19 @@ public class PlanetView : SimpleView
     public float RotationSpeed = 1f;
 
     private Transform target;
+
+    public int MaxEntities = 50;
+    public int PlannedEntities = 0;
+
+    public List<EntityView> ConnectedEntities;
+
+    public bool HasEntitySpace
+    {
+        get
+        {
+            return ConnectedEntities.Count + PlannedEntities < MaxEntities;
+        }
+    }
 
     public bool HasBuildSpace
     {
@@ -45,6 +60,20 @@ public class PlanetView : SimpleView
     public override void Init()
     {
         base.Init();
+    }
+
+    public void AddEntity(EntityView entity)
+    {
+        if (ConnectedEntities.Contains(entity))
+            return;
+        ConnectedEntities.Add(entity);
+    }
+
+    public void RemoveEntity(EntityView entity)
+    {
+        if (!ConnectedEntities.Contains(entity))
+            return;
+        ConnectedEntities.Remove(entity);
     }
 
     public void AddConnectedPlanet(PlanetView other)

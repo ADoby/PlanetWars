@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 8
-  productGUID: 30625f98c2e6e0642bea254e84c35b3f
+  productGUID: 1d4b82f517658c349a2d4568cbffd3cc
   AndroidProfiler: 0
   defaultScreenOrientation: 4
   targetDevice: 2
@@ -466,7 +466,7 @@ PlayerSettings:
   Game_Performance_ServiceEnabled::Game_Performance_ServiceEnabled: False
   Hub_ServiceEnabled::Hub_ServiceEnabled: False
   Purchasing_ServiceEnabled::Purchasing_ServiceEnabled: False
-  UNet_ServiceEnabled::UNet_ServiceEnabled: True
+  UNet_ServiceEnabled::UNet_ServiceEnabled: False
   Unity_Ads_ServiceEnabled::Unity_Ads_ServiceEnabled: False
   vectorPropertyNames:
   - Android::VR::enabledDevices
@@ -506,7 +506,7 @@ PlayerSettings:
   XboxOne::VR::enabledDevices: []
   iOS::VR::enabledDevices: []
   tvOS::VR::enabledDevices: []
-  cloudProjectId: 6f441200-9908-45c3-888a-e4ed570ea881
-  projectName: PlanetWarsUnity
-  organizationId: adoby
+  cloudProjectId: 
+  projectName: 
+  organizationId: 
   cloudEnabled: 0

@@ -9,6 +9,9 @@ public class PlanetMenuMediator : SimpleMediator
     [Inject]
     public PlanetClickedSignal PlanetClickedSignal { get; set; }
 
+    [Inject]
+    public AppModell AppModell { get; set; }
+
     public override void OnRegister()
     {
         base.OnRegister();
@@ -28,13 +31,17 @@ public class PlanetMenuMediator : SimpleMediator
 
     private void OnCloseMenu()
     {
+        AppModell.PlanetMenuShown = false;
         gameObject.SetActive(false);
         View.FullScreenCloseButton.SetActive(false);
     }
 
     private void OnPlanetClicked(PlanetClickedArgs args)
     {
-        transform.position = Camera.main.WorldToScreenPoint(args.Target.Target.position);
+        if (AppModell.PlanetMenuShown)
+            return;
+        AppModell.PlanetMenuShown = true;
+        transform.position = Input.mousePosition;
         gameObject.SetActive(true);
         View.FullScreenCloseButton.SetActive(true);
     }

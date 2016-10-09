@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class EntityMediator : SimpleMediator
@@ -9,17 +9,36 @@ public class EntityMediator : SimpleMediator
     [Inject]
     public SendEntityToPlanetSignal SendEntityToPlanetSignal { get; set; }
 
+    [Inject]
+    public MoveEntitesSignal MoveEntitesSignal { get; set; }
+
+    [Inject]
+    public EntityDiedSignal EntityDiedSignal { get; set; }
+
     public EntityStates State;
 
-    private Transform target;
+    public List<EntityPartView> Weapons;
+    public float checkEnemyTimer = 0f;
+    public float attackCooldownTimer = 0f;
 
-    private Transform Target
+    private Collider[] targets;
+    private EntityView enemy;
+    public Vector3 direction;
+
+    public Vector3 rotateBy;
+    public int Direction = 1;
+
+    private int counter = 0;
+
+    public List<EntityView> Enemies
     {
         get
         {
-            if (target == null)
-                target = GetComponent<Transform>();
-            return target;
+            return View.Enemies;
+        }
+        set
+        {
+            View.Enemies = value;
         }
     }
 
@@ -31,13 +50,68 @@ public class EntityMediator : SimpleMediator
         else
             Direction = -1;
         View.Init();
+        View.DiedSignal.AddListener(Die);
         SendEntityToPlanetSignal.AddListener(SendToPlanet);
+        MoveEntitesSignal.AddListener(OnMoveEntities);
+        EntityDiedSignal.AddListener(OnEntityDied);
+
+        Weapons = new List<EntityPartView>();
+        for (int i = 0; i < View.Parts.Count; i++)
+        {
+            if (View.Parts[i].PartType == PartTypes.WEAPON)
+            {
+                Weapons.Add(View.Parts[i]);
+            }
+        }
+
+        if (View.ConnectedPlanet == null)
+            View.Collider.enabled = true;
+    }
+
+    private void Die()
+    {
+        if (Enemies != null)
+            Enemies.Clear();
+        gameObject.SetActive(false);
+        EntityDiedSignal.Dispatch(View);
+    }
+
+    private void OnMoveEntities(MoveEntitiesArgs args)
+    {
+        if (args.From == View.ConnectedPlanet)
+        {
+            View.ConnectedPlanet.RemoveEntity(View);
+            View.ConnectedPlanet = args.To;
+            SetState(EntityStates.MOVE_TO_PLANET);
+        }
+    }
+
+    private void OnEntityDied(EntityView view)
+    {
+        if (Enemies == null)
+            return;
+        if (Enemies.Contains(view))
+            Enemies.Remove(view);
     }
 
     public override void OnRemove()
     {
         base.OnRemove();
         SendEntityToPlanetSignal.RemoveListener(SendToPlanet);
+    }
+
+    private void OnEnable()
+    {
+        Updater.FixedUpdateCallback -= FixedUpdated;
+        Updater.FixedUpdateCallback += FixedUpdated;
+        Updater.UpdateCallback -= Updated;
+        Updater.UpdateCallback += Updated;
+    }
+
+    private void OnDisable()
+    {
+        Updater.FixedUpdateCallback -= FixedUpdated;
+        Updater.UpdateCallback -= Updated;
     }
 
     private void SendToPlanet(EntityView entity, PlanetView planet)
@@ -48,72 +122,133 @@ public class EntityMediator : SimpleMediator
         SetState(EntityStates.MOVE_TO_PLANET);
     }
 
-    private void Update()
+    private void Updated(float deltaTime)
     {
-        collisionIgnoreTimer += Time.deltaTime;
+        if (View.IsDead)
+            return;
+        /*
+        checkEnemyTimer += deltaTime;
+        if (checkEnemyTimer >= 2f)
+        {
+            CheckForEnemies();
+            checkEnemyTimer = 0;
+        }*/
+        attackCooldownTimer += deltaTime;
+        if (attackCooldownTimer >= View.AttackCooldown)
+        {
+            attackCooldownTimer = 0f;
+            if (Enemies != null && Enemies.Count > 0)
+            {
+                //Attack enemy
+                for (int i = 0; i < Enemies.Count; i++)
+                {
+                    if (!Enemies[i].IsDead)
+                    {
+                        Shoot(Enemies[i]);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
-    private void FixedUpdate()
+    private void Shoot(EntityView other)
     {
+        if (Weapons == null)
+            return;
+        for (int i = 0; i < Weapons.Count; i++)
+        {
+            Weapons[i].Shoot(other);
+        }
+    }
+
+    private void CheckForEnemies()
+    {
+        Enemies.Clear();
+        targets = Physics.OverlapSphere(transform.position, View.AggroRange);
+        for (int i = 0; i < targets.Length; i++)
+        {
+            enemy = targets[i].GetComponent<EntityView>();
+            if (enemy != null && !enemy.IsDead && enemy.Player != View.Player)
+                Enemies.Add(enemy);
+        }
+    }
+
+    private void FixedUpdated(float deltaTime)
+    {
+        if (View.ConnectedPlanet == null)
+            return;
         if (State == EntityStates.IDLE_AROUND_PLANET)
         {
-            MoveAroundPlanet();
+            MoveAroundPlanet(deltaTime);
         }
         else if (State == EntityStates.MOVE_TO_PLANET)
         {
-            MoveToPlanet();
+            MoveToPlanet(deltaTime);
         }
     }
 
-    private void MoveToPlanet()
-    {
-    }
-
-    public Vector3 direction;
-
-    public Vector3 rotateBy;
-    public int Direction = 1;
-
-    private int counter = 0;
-
-    private void MoveAroundPlanet()
+    private void MoveToPlanet(float deltaTime)
     {
         if (View.Rigid.isKinematic)
             return;
 
         counter++;
-        if (counter < 5)
+        if (counter < View.UpdateEveryXFrame)
             return;
         counter = 0;
-        Vector3 toPlanet = (Target.position - View.ConnectedPlanet.Target.position) * Direction;
-        direction = Vector3.Cross(toPlanet, Vector3.forward);
+        deltaTime = deltaTime * View.UpdateEveryXFrame;
 
-        Vector3 middle = View.ConnectedPlanet.Target.position + toPlanet.normalized * View.ConnectedPlanet.Radius * Direction;
-        middle = middle - Target.position;
-        direction = direction.normalized + middle * View.ForceToRadius;
+        direction = (View.ConnectedPlanet.Target.position - transform.position);
 
         if (direction.magnitude > 0.1)
         {
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             Quaternion dirQ = Quaternion.AngleAxis(angle - 90, Vector3.forward);
-            Target.rotation = Quaternion.Slerp(transform.rotation, dirQ, direction.magnitude * View.RotateSpeed * Time.fixedDeltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, dirQ, direction.magnitude * View.RotateSpeed * deltaTime);
         }
 
-        Vector2 forward = Target.up * Time.fixedDeltaTime * View.Speed;
+        Vector3 forward = transform.up * deltaTime * View.Speed;
+
+        View.Rigid.velocity += forward;
+
+        if (direction.magnitude < View.ConnectedPlanet.Radius)
+        {
+            SetState(EntityStates.IDLE_AROUND_PLANET);
+        }
+    }
+
+    private void MoveAroundPlanet(float deltaTime)
+    {
+        if (View.Rigid.isKinematic)
+            return;
+
+        counter++;
+        if (counter < View.UpdateEveryXFrame)
+            return;
+        counter = 0;
+        deltaTime = deltaTime * View.UpdateEveryXFrame;
+
+        Vector3 toPlanet = (transform.position - View.ConnectedPlanet.Target.position) * Direction;
+        direction = Vector3.Cross(toPlanet, Vector3.forward);
+
+        Vector3 middle = View.ConnectedPlanet.Target.position + toPlanet.normalized * View.ConnectedPlanet.Radius * Direction;
+        middle = middle - transform.position;
+        direction = direction.normalized + middle * View.ForceToRadius;
+
+        //Debug.DrawRay(Target.position, direction, Color.red);
+
+        if (direction.magnitude > 0.1)
+        {
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            Quaternion dirQ = Quaternion.AngleAxis(angle - 90, Vector3.forward);
+            transform.rotation = Quaternion.Slerp(transform.rotation, dirQ, direction.magnitude * View.RotateSpeed * deltaTime);
+        }
+
+        Vector3 forward = transform.up * deltaTime * View.Speed;
 
         View.Rigid.velocity += forward;
     }
-
-    private float collisionIgnoreTimer = 0;
-    /*
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collisionIgnoreTimer > View.CollisionIgnoreTime)
-        {
-            Direction *= -1;
-            collisionIgnoreTimer = 0f;
-        }
-    }*/
 
     private void SetState(EntityStates state)
     {
