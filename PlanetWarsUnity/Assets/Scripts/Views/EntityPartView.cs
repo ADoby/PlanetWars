@@ -9,7 +9,7 @@ public enum PartTypes
     ENGINE
 }
 
-public class EntityPartView : SimpleView
+public class EntityPartView : SimpleMVCSBehaviour
 {
     public PartTypes PartType;
 
@@ -24,9 +24,15 @@ public class EntityPartView : SimpleView
     public LineRenderer Laser;
     private GameObject laserObject;
 
-    public override void Init()
+    public override void BindToContext(SimpleContext context)
     {
-        base.Init();
+        base.BindToContext(context);
+        Bind(this);
+    }
+
+    public override void OnRegister()
+    {
+        base.OnRegister();
 
         if (Laser != null)
             laserObject = Laser.gameObject;

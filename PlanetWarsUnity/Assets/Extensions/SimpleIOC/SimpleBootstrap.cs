@@ -3,26 +3,29 @@ using UnityEngine;
 
 public class SimpleBootstrap : ContextView
 {
-	private SimpleContext simpleContext;
+    public static SimpleBootstrap Instance;
 
-	public SimpleContext SimpleContext
-	{
-		get
-		{
-			if (simpleContext == null)
-			{
-				if (context != null && context is SimpleContext)
-					simpleContext = (SimpleContext)context;
-				else
-					Debug.LogError("SimpleContext not intilized");
-			}
-			return simpleContext;
-		}
-	}
+    private SimpleContext simpleContext;
 
-	protected virtual void Awake()
-	{
-		simpleContext = new SimpleContext(this);
-		context = simpleContext;
-	}
+    public SimpleContext SimpleContext
+    {
+        get
+        {
+            if (simpleContext == null)
+            {
+                if (context != null && context is SimpleContext)
+                    simpleContext = (SimpleContext)context;
+                else
+                    Debug.LogError("SimpleContext not intilized");
+            }
+            return simpleContext;
+        }
+    }
+
+    protected virtual void Awake()
+    {
+        Instance = this;
+        simpleContext = new SimpleContext(this);
+        context = simpleContext;
+    }
 }

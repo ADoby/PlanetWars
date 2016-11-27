@@ -1,16 +1,17 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-public class BuildingView : SimpleView
+public class BuildingView : SimpleMVCSBehaviour
 {
     public bool Built = false;
     public PlanetView ConnectedPlanet;
     public AnimationCurve ScaleCurve;
     public float ScaleTime = 1f;
 
-    public override void Init()
+    public override void BindToContext(SimpleContext context)
     {
-        base.Init();
+        base.BindToContext(context);
+        Bind(this);
     }
 
     public void SetPosition(Transform target)

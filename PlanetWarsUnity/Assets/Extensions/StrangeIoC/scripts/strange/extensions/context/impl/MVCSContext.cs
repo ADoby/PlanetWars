@@ -14,62 +14,56 @@
  *		limitations under the License.
  */
 
-using strange.extensions.command.api;
-using strange.extensions.command.impl;
-using strange.extensions.context.api;
-using strange.extensions.dispatcher.api;
-using strange.extensions.dispatcher.eventdispatcher.api;
-using strange.extensions.dispatcher.eventdispatcher.impl;
-
 /**
  * @class strange.extensions.context.impl.MVCSContext
- *
+ * 
  * The recommended Context for getting the most out of StrangeIoC.
- *
- * By extending this Context, you get the entire
- * all-singing/all-dancing version of Strange, as it was shipped from the
+ * 
+ * By extending this Context, you get the entire 
+ * all-singing/all-dancing version of Strange, as it was shipped from the 
  * warehouse and ready for you to map your dependencies.
- *
+ * 
  * As the name suggests, MVCSContext provides structure for
  * app development using the classic <a href="http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">MVC (Model-View-Controller)</a>
- * design pattern, and adds 'S' (Service) for asynchronous calls outside
+ * design pattern, and adds 'S' (Service) for asynchronous calls outside 
  * the application. Strange is highly modular, so you needn't use
  * MVCSContext if you don't want to (you can extend Context or CrossContext directly)
- * but MVCS is a highly proven design strategy and MVCSContext is by far the easiest
+ * but MVCS is a highly proven design strategy and MVCSContext is by far the easiest 
  * way to get familiar with what Strange has to offer.
- *
+ * 
  * The parts:
  * <ul>
  * <li>contextView</li>
- *
+ * 
  * The GameObject at the top of your display hierarchy. Attach a subclass of
  * ContextView to a GameObject, then instantiate a subclass of MVCSContext
  * to start the app.
- *
+ * 
  * Example:
 
 		public class MyProjectRoot : ContextView
 		{
+	
 			void Awake()
 			{
 				context = new MyContext(this); //Extends MVCSContext
 			}
 		}
 
- *
+ * 
  * The contextView is automatically injected into all Mediators
  * and available for injection into commands like so:
 
 		[Inject(ContextKeys.CONTEXT_VIEW)]
 		public GameObject contextView{get;set;}
 
- * It is strongly advised that the contextView NOT be injected into
+ * It is strongly advised that the contextView NOT be injected into 
  * Views, Models or Services.
- *
+ * 
  * <li>injectionBinder</li>
- *
+ * 
  * Maps dependencies to concrete classes or values.
- *
+ * 
  * Examples:
 
 		injectionBinder.Bind<ISpaceship>().To<TieFighter>(); //Injects a new TieFighter wherever an ISpaceship is requested
@@ -85,10 +79,10 @@ using strange.extensions.dispatcher.eventdispatcher.impl;
 		public IInjectionBinder injectionBinder{ get; set;}
 
  * <li>dispatcher</li>
- *
+ * 
  * The event bus shared across the context. Informs listeners
  * and triggers commands.
- *
+ * 
  * `dispatcher` is injected into all EventMediators, EventCommands
  * and EventSequenceCommands, and may be injected elsewhere with:
 
@@ -98,9 +92,9 @@ using strange.extensions.dispatcher.eventdispatcher.impl;
  * For examples, see IEventDispatcher. Generally you don't map the dispatcher's
  * events to methods inside the Context. Rather, you map Commands and Sequences.
  * Read on!
- *
+ * 
  * <li>crossContextDispatcher</li>
- *
+ * 
  * A second event bus for sending events between contexts. It
  * should only be accessed from Commands or SequenceCommands,
  * into which it may be injected by declaring the dependency:
@@ -108,41 +102,41 @@ using strange.extensions.dispatcher.eventdispatcher.impl;
 		[Inject(ContextKeys.CROSS_CONTEXT_DISPATCHER)]
 		public IEventDispatcher dispatcher{ get; set;}
 
- *
+ * 
  * <li>commandBinder</li>
- *
+ * 
  * Maps events that result in the creation and execution of Commands.
  * Events from dispatcher can be used to trigger Commands.
- *
+ * 
  * `commandBinder` is automatically injected into all Commands.
- *
+ * 
  * Examples:
 
 		commandBinder.Bind(GameEvent.MISSILE_HIT).To<MissileHitCommand>(); //MissileHitCommand fires whenever MISSILE_HIT is dispatched
 		commandBinder.Bind(GameEvent.MISSILE_HIT).To<IncrementScoreCommand>().To<UpdateServerCommand>(); //Both Commands fire
 		commandBinder.Bind(ContextEvent.START).To<StartCommand>().Once(); //StartCommand fires when START fires, then unmaps itself
 
- *
+ * 
  * <li>sequencer</li>
- *
+ * 
  * Maps events that result in the creation and execution of Sequences,
  * which are just like Commands, except they run sequentially, rather than
  * in parallel.
- *
+ * 
  * 'sequencer' is automatically injected into all SequenceCommands.
- *
+ * 
  * In the following example, `TestMissileHitCommand` runs logic to determine
  * whether the missile hit is valid. If it's not, it may call `BreakSeqeunce()`.
  * so neither of the other Commands will fire.
 
 		sequencer.Bind(GameEvent.MISSILE_HIT).To<TestMissileHitCommand>().To<IncrementScoreCommand>().To<UpdateServerCommand>();
 
- *
+ * 
  * <li>mediationBinder</li>
- *
- * Maps Views to Mediators in order to insultate Views from direct
+ * 
+ * Maps Views to Mediators in order to insultate Views from direct 
  * linkage to the application.
- *
+ * 
  * MediationBinder isn't automatically injected anywhere. It is
  * possible, however, that you might want to change mediation bindings
  * at runtime. This might prove difficult as a practical matter, but
@@ -152,17 +146,24 @@ using strange.extensions.dispatcher.eventdispatcher.impl;
 		[Inject]
 		IMediationBinder mediationBinder{get;set;}
 
- *
+ * 
  * Example:
 
 		mediationBinder.Bind<RobotView>().To<RobotMediator>();
  *	<ul>
- *
- *
+ * 
+ * 
  */
 
 using strange.extensions.implicitBind.api;
 using strange.extensions.implicitBind.impl;
+using UnityEngine;
+using strange.extensions.command.api;
+using strange.extensions.command.impl;
+using strange.extensions.context.api;
+using strange.extensions.dispatcher.api;
+using strange.extensions.dispatcher.eventdispatcher.api;
+using strange.extensions.dispatcher.eventdispatcher.impl;
 using strange.extensions.injector.api;
 using strange.extensions.mediation.api;
 using strange.extensions.mediation.impl;
@@ -170,32 +171,32 @@ using strange.extensions.sequencer.api;
 using strange.extensions.sequencer.impl;
 using strange.framework.api;
 using strange.framework.impl;
-using UnityEngine;
 
 namespace strange.extensions.context.impl
 {
 	public class MVCSContext : CrossContext
 	{
 		/// A Binder that maps Events to Commands
-		public ICommandBinder commandBinder { get; set; }
+		public ICommandBinder commandBinder{get;set;}
 
 		/// A Binder that serves as the Event bus for the Context
-		public IEventDispatcher dispatcher { get; set; }
+		public IEventDispatcher dispatcher{get;set;}
 
 		/// A Binder that maps Views to Mediators
-		public IMediationBinder mediationBinder { get; set; }
+		public IMediationBinder mediationBinder{get;set;}
 
 		//Interprets implicit bindings
 		public IImplicitBinder implicitBinder { get; set; }
 
 		/// A Binder that maps Events to Sequences
-		public ISequencer sequencer { get; set; }
+		public ISequencer sequencer{get;set;}
+
 
 		/// A list of Views Awake before the Context is fully set up.
 		protected static ISemiBinding viewCache = new SemiBinding();
-
+		
 		public MVCSContext() : base()
-		{ }
+		{}
 
 		/// The recommended Constructor
 		/// Just pass in the instance of your ContextView. Everything will begin automatically.
@@ -211,7 +212,7 @@ namespace strange.extensions.context.impl
 		public MVCSContext(MonoBehaviour view, bool autoMapping) : base(view, autoMapping)
 		{
 		}
-
+		
 		override public IContext SetContextView(object view)
 		{
 			contextView = (view as MonoBehaviour).gameObject;
@@ -239,7 +240,7 @@ namespace strange.extensions.context.impl
 			injectionBinder.Bind<ISequencer>().To<EventSequencer>().ToSingleton();
 			injectionBinder.Bind<IImplicitBinder>().To<ImplicitBinder>().ToSingleton();
 		}
-
+		
 		protected override void instantiateCoreComponents()
 		{
 			base.instantiateCoreComponents();
@@ -249,7 +250,7 @@ namespace strange.extensions.context.impl
 			}
 			injectionBinder.Bind<GameObject>().ToValue(contextView).ToName(ContextKeys.CONTEXT_VIEW);
 			commandBinder = injectionBinder.GetInstance<ICommandBinder>() as ICommandBinder;
-
+			
 			dispatcher = injectionBinder.GetInstance<IEventDispatcher>(ContextKeys.CONTEXT_DISPATCHER) as IEventDispatcher;
 			mediationBinder = injectionBinder.GetInstance<IMediationBinder>() as IMediationBinder;
 			sequencer = injectionBinder.GetInstance<ISequencer>() as ISequencer;
@@ -258,7 +259,7 @@ namespace strange.extensions.context.impl
 			(dispatcher as ITriggerProvider).AddTriggerable(commandBinder as ITriggerable);
 			(dispatcher as ITriggerProvider).AddTriggerable(sequencer as ITriggerable);
 		}
-
+		
 		protected override void postBindings()
 		{
 			//It's possible for views to fire their Awake before bindings. This catches any early risers and attaches their Mediators.
@@ -268,13 +269,13 @@ namespace strange.extensions.context.impl
 		}
 
 		/// Fires ContextEvent.START
-		/// Whatever Command/Sequence you want to happen first should
+		/// Whatever Command/Sequence you want to happen first should 
 		/// be mapped to this event.
 		public override void Launch()
 		{
 			dispatcher.Dispatch(ContextEvent.START);
 		}
-
+		
 		/// Gets an instance of the provided generic type.
 		/// Always bear in mind that doing this risks adding
 		/// dependencies that must be cleaned up when Contexts
@@ -297,7 +298,7 @@ namespace strange.extensions.context.impl
 			}
 			return null;
 		}
-
+		
 		override public void AddView(object view)
 		{
 			if (mediationBinder != null)
@@ -309,15 +310,14 @@ namespace strange.extensions.context.impl
 				cacheView(view as MonoBehaviour);
 			}
 		}
-
+		
 		override public void RemoveView(object view)
 		{
-			if (mediationBinder != null)
-				mediationBinder.Trigger(MediationEvent.DESTROYED, view as IView);
+			mediationBinder.Trigger(MediationEvent.DESTROYED, view as IView);
 		}
 
 		/// Caches early-riser Views.
-		///
+		/// 
 		/// If a View is on stage at startup, it's possible for that
 		/// View to be Awake before this Context has finished initing.
 		/// `cacheView()` maintains a list of such 'early-risers'
@@ -336,7 +336,7 @@ namespace strange.extensions.context.impl
 		{
 			if (mediationBinder == null)
 				throw new ContextException("MVCSContext cannot mediate views without a mediationBinder", ContextExceptionType.NO_MEDIATION_BINDER);
-
+			
 			object[] values = viewCache.value as object[];
 			if (values == null)
 			{
@@ -358,3 +358,4 @@ namespace strange.extensions.context.impl
 		}
 	}
 }
+

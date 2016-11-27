@@ -3,25 +3,47 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class CreateFactoryView : SimpleView
+public class CreateFactoryView : SimpleMVCSBehaviour
 {
-    public VoidSignal CreateFactorySignal;
-    public VoidSignal MoveEntitesSignal;
-
-    public override void Init()
+    public override void BindToContext(SimpleContext context)
     {
-        base.Init();
-        CreateFactorySignal = new VoidSignal();
-        MoveEntitesSignal = new VoidSignal();
+        base.BindToContext(context);
+        Bind(this);
     }
 
     public void CreateFactory()
     {
-        CreateFactorySignal.Dispatch();
+        OnShouldCreateFactory();
     }
 
     public void MoveEntites()
     {
-        MoveEntitesSignal.Dispatch();
+        OnShouldMoveEntities();
+    }
+
+    [Inject]
+    public CreateFactorySignal CreateFactorySignal { get; set; }
+
+    [Inject]
+    public StartMovingEntities StartMovingEntities { get; set; }
+
+    public override void OnRegister()
+    {
+        base.OnRegister();
+    }
+
+    public override void OnRemove()
+    {
+        base.OnRemove();
+    }
+
+    private void OnShouldCreateFactory()
+    {
+        CreateFactorySignal.Dispatch();
+    }
+
+    private void OnShouldMoveEntities()
+    {
+        StartMovingEntities.Dispatch();
     }
 }

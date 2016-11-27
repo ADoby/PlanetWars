@@ -51,3 +51,11 @@ public class OnPlanetExitSignal : Signal<PlanetView> { };
 public class StartMovingEntities : Signal { };
 
 public class EntityDiedSignal : Signal<EntityView> { };
+
+public class UpdateUIPositionSignal : Signal { };
+
+public class MouseDownSignal : Signal<int> { };
+
+public class MouseUpSignal : Signal<int> { };
+
+public class MouseClickSignal : Signal<int> { };

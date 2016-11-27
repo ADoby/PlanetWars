@@ -15,26 +15,20 @@ public class MainContext : SimpleContext
 
         Bind<PlanetConnectionAddedSignal>(true, false);
         Bind<CreateFactorySignal>(true, false);
+        Bind<OnPlanetHoverSignal>(true, false);
+        Bind<OnPlanetExitSignal>(true, false);
         Bind<PlanetClickedSignal>(true, false);
         Bind<SendEntityToPlanetSignal>(true, false);
         Bind<MoveEntitesSignal>(true, false);
         Bind<StartMovingEntities>(true, false);
-        Bind<OnPlanetHoverSignal>(true, false);
-        Bind<OnPlanetExitSignal>(true, false);
         Bind<EntityDiedSignal>(true, false);
+        Bind<UpdateUIPositionSignal>(true, false);
+        Bind<MouseDownSignal>(true, false);
+        Bind<MouseUpSignal>(true, false);
+        Bind<MouseClickSignal>(true, false);
 
         BindCommand<CreateFactorySignal, CreateFactoryCommand>();
-
-        BindMediator<PlanetView, PlanetMediator>();
-        BindMediator<BuildingView, BuildingMediator>();
-        BindMediator<EntityView, EntityMediator>();
-        BindMediator<EntityPartView, EntityPartMediator>();
-
-        BindMediator<FactoryView, FactoryMediator>();
-        BindMediator<CreateFactoryView, CreateFactoryMediator>();
-        BindMediator<ClickPlanetView, ClickPlanetMediator>();
-        BindMediator<PlanetMenuView, PlanetMenuMediator>();
-        BindMediator<CameraView, CameraMediator>();
-        BindMediator<MoveEntitesView, MoveEntitesMediator>();
+        BindCommand<OnPlanetHoverSignal, PlanetHoverCommand>();
+        BindCommand<OnPlanetExitSignal, PlanetExitCommand>();
     }
 }

@@ -14,22 +14,21 @@
  *		limitations under the License.
  */
 
-using strange.extensions.injector.api;
-using strange.extensions.reflector.impl;
-using strange.framework.api;
-using strange.framework.impl;
-
 /**
  * @class strange.extensions.injector.impl.InjectionBinder
- *
+ * 
  * The Binder for creating Injection mappings.
- *
+ * 
  * @see strange.extensions.injector.api.IInjectionBinder
  * @see strange.extensions.injector.api.IInjectionBinding
  */
 
 using System;
 using System.Collections.Generic;
+using strange.framework.api;
+using strange.extensions.injector.api;
+using strange.extensions.reflector.impl;
+using strange.framework.impl;
 
 namespace strange.extensions.injector.impl
 {
@@ -37,11 +36,11 @@ namespace strange.extensions.injector.impl
 	{
 		private IInjector _injector;
 
-		public InjectionBinder()
+		public InjectionBinder ()
 		{
-			injector = new Injector();
+			injector = new Injector ();
 			injector.binder = this;
-			injector.reflector = new ReflectionBinder();
+			injector.reflector = new ReflectionBinder ();
 		}
 
 		public object GetInstance(Type key)
@@ -51,12 +50,12 @@ namespace strange.extensions.injector.impl
 
 		public virtual object GetInstance(Type key, object name)
 		{
-			IInjectionBinding binding = GetBinding(key, name) as IInjectionBinding;
+			IInjectionBinding binding = GetBinding (key, name) as IInjectionBinding;
 			if (binding == null)
 			{
-				throw new InjectionException("InjectionBinder has no binding for:\n\tkey: " + key + "\nname: " + name, InjectionExceptionType.NULL_BINDING);
+				throw new InjectionException ("InjectionBinder has no binding for:\n\tkey: " + key + "\nname: " + name, InjectionExceptionType.NULL_BINDING);
 			}
-			object instance = GetInjectorForBinding(binding).Instantiate(binding);
+			object instance = GetInjectorForBinding(binding).Instantiate (binding);
 			return instance;
 		}
 
@@ -67,25 +66,25 @@ namespace strange.extensions.injector.impl
 
 		public T GetInstance<T>()
 		{
-			object instance = GetInstance(typeof(T));
-			T retv = (T)instance;
+			object instance = GetInstance (typeof (T));
+			T retv = (T) instance;
 			return retv;
 		}
 
 		public T GetInstance<T>(object name)
 		{
-			object instance = GetInstance(typeof(T), name);
-			T retv = (T)instance;
+			object instance = GetInstance (typeof (T), name);
+			T retv = (T) instance;
 			return retv;
 		}
 
 		override public IBinding GetRawBinding()
 		{
-			return new InjectionBinding(resolver);
+			return new InjectionBinding (resolver);
 		}
 
 		public IInjector injector
-		{
+		{ 
 			get
 			{
 				return _injector;
@@ -103,7 +102,7 @@ namespace strange.extensions.injector.impl
 
 		new public IInjectionBinding Bind<T>()
 		{
-			return base.Bind<T>() as IInjectionBinding;
+			return base.Bind<T> () as IInjectionBinding;
 		}
 
 		public IInjectionBinding Bind(Type key)
@@ -113,19 +112,19 @@ namespace strange.extensions.injector.impl
 
 		new virtual public IInjectionBinding GetBinding<T>()
 		{
-			return base.GetBinding<T>() as IInjectionBinding;
+			return base.GetBinding<T> () as IInjectionBinding;
 		}
 
 		//SDM2014-0120: "virtual" added as dictated by changes to CrossContextInjectionBinder in relation to the cross-context implicit binding fix
 		new virtual public IInjectionBinding GetBinding<T>(object name)
 		{
-			return base.GetBinding<T>(name) as IInjectionBinding;
+			return base.GetBinding<T> (name) as IInjectionBinding;
 		}
 
 		//SDM2014-0120: "virtual" added as dictated by changes to CrossContextInjectionBinder in relation to the cross-context implicit binding fix
 		new virtual public IInjectionBinding GetBinding(object key)
 		{
-			return base.GetBinding(key) as IInjectionBinding;
+			return base.GetBinding (key) as IInjectionBinding;
 		}
 
 		new virtual public IInjectionBinding GetBinding(object key, object name)
@@ -135,37 +134,38 @@ namespace strange.extensions.injector.impl
 
 		public int ReflectAll()
 		{
-			List<Type> list = new List<Type>();
+			List<Type> list = new List<Type> ();
 			foreach (KeyValuePair<object, Dictionary<object, IBinding>> pair in bindings)
 			{
 				Dictionary<object, IBinding> dict = pair.Value;
-				foreach (KeyValuePair<object, IBinding> bPair in dict)
+				foreach(KeyValuePair<object, IBinding> bPair in dict)
 				{
 					IBinding binding = bPair.Value as IBinding;
-					Type t = (binding.value is Type) ? (Type)binding.value : binding.value.GetType();
+					Type t = (binding.value is Type) ? (Type) binding.value : binding.value.GetType();
 					if (list.IndexOf(t) == -1)
 					{
-						list.Add(t);
+						list.Add (t);
 					}
 				}
 			}
-			return Reflect(list);
+			return Reflect (list);
 		}
 
 		public int Reflect(List<Type> list)
 		{
 			int count = 0;
-			foreach (Type t in list)
+			foreach(Type t in list)
 			{
 				//Reflector won't permit primitive types, so screen them
 				if (t.IsPrimitive || t == typeof(Decimal) || t == typeof(string))
 				{
 					continue;
 				}
-				count++;
-				injector.reflector.Get(t);
+				count ++;
+				injector.reflector.Get (t);
 			}
 			return count;
 		}
 	}
 }
+

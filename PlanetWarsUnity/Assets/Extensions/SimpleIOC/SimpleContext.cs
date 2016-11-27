@@ -1,33 +1,84 @@
 ﻿using strange.extensions.command.api;
 using strange.extensions.command.impl;
+using strange.extensions.context.api;
 using strange.extensions.context.impl;
+using strange.extensions.dispatcher.eventdispatcher.api;
+using strange.extensions.dispatcher.eventdispatcher.impl;
+using strange.extensions.implicitBind.api;
+using strange.extensions.implicitBind.impl;
 using strange.extensions.injector.api;
 using strange.extensions.injector.impl;
 using strange.extensions.mediation.api;
+using strange.extensions.mediation.impl;
+using strange.extensions.sequencer.api;
+using strange.extensions.sequencer.impl;
+using strange.extensions.signal.impl;
+using strange.framework.api;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SimpleContext : MVCSContext
 {
     public static MonoBehaviour Behaviour;
 
-    public SimpleContext(MonoBehaviour contextView) : base(contextView)
+    public SimpleBootstrap Bootstrap;
+
+    public static SimpleContext Context;
+
+    public SimpleContext(MonoBehaviour view)
     {
-        Behaviour = contextView;
+        Behaviour = view;
+        Context = this;
+        var flags = ContextStartupFlags.AUTOMATIC;
+        //If firstContext was unloaded, the contextView will be null. Assign the new context as firstContext.
+        if (firstContext == null || firstContext.GetContextView() == null)
+        {
+            firstContext = this;
+        }
+        else
+        {
+            firstContext.AddContext(this);
+        }
+        SetContextView(view);
+        addCoreComponents();
+        this.autoStartup = (flags & ContextStartupFlags.MANUAL_LAUNCH) != ContextStartupFlags.MANUAL_LAUNCH;
+        if ((flags & ContextStartupFlags.MANUAL_MAPPING) != ContextStartupFlags.MANUAL_MAPPING)
+        {
+            Start();
+        }
+    }
+
+    public void BubbleBind()
+    {
+        SimpleMVCSBehaviour[] behaviours = Resources.FindObjectsOfTypeAll<SimpleMVCSBehaviour>();
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            if (behaviours[i] != null)
+            {
+                behaviours[i].BubbleFast(this);
+            }
+        }
     }
 
     protected override void addCoreComponents()
     {
         base.addCoreComponents();
 
-        // bind signal command binder
         injectionBinder.Unbind<ICommandBinder>();
         injectionBinder.Bind<ICommandBinder>().To<SignalCommandBinder>().ToSingleton();
+        injectionBinder.Unbind<IMediationBinder>();
+        injectionBinder.Bind<IMediationBinder>().To<SimpleBehaviourBinder>().ToSingleton();
     }
 
     public override void Launch()
     {
         base.Launch();
-        StartSignal startSignal = injectionBinder.GetInstance<StartSignal>();
+        SendStartSignal<StartSignal>();
+    }
+
+    public virtual void SendStartSignal<T>() where T : Signal
+    {
+        var startSignal = injectionBinder.GetInstance<T>();
         startSignal.Dispatch();
     }
 
@@ -38,24 +89,53 @@ public class SimpleContext : MVCSContext
     {
         base.mapBindings();
         BindContext();
+        BubbleBind();
         AfterBinding();
     }
 
     protected virtual void BindContext()
     {
-        Bind<StartSignal>(true, true);
-
-        BindMediator<SimpleView, SimpleMediator>();
-
-        BindCommand<StartSignal, SimpleCommand>().Once();
+        Bind<StartSignal>(true, false);
+        Bind<SimpleButtonSignal>(true, false);
     }
 
     protected virtual void AfterBinding()
     {
     }
 
-    protected virtual IMediationBinding BindMediator<View, Mediator>()
+    //private List<string> registeredTypes = new List<string>();
+    public virtual IMediationBinding BindBehaviour<T>()
     {
+        /*string name = typeof(T).ToString();
+        if (registeredTypes.Contains(name))
+            return null;
+        registeredTypes.Add(name);*/
+
+        return mediationBinder.Bind<T>();
+    }
+
+    public virtual IMediationBinding BindBehaviour<T>(T behaviour)
+    {
+        return BindBehaviour<T>();
+    }
+
+    public virtual IMediationBinding BindMediator<View, Mediator>()
+    {
+        IMediationBinding binding = null;
+        try
+        {
+            binding = mediationBinder.GetBinding<View>() as IMediationBinding;
+        }
+        catch (InjectionException)
+        {
+            //Workaround
+            //Couldn't find Binding, strange throws error. why? I don't know
+            //No "ContainsBinding" method yet
+        }
+
+        if (binding != null)
+            return binding;
+
         return mediationBinder.Bind<View>().To<Mediator>();
     }
 
@@ -66,7 +146,7 @@ public class SimpleContext : MVCSContext
     /// <typeparam name="Command"></typeparam>
     /// <param name="once"></param>
     /// <returns></returns>
-    protected virtual ICommandBinding BindCommand<Signal, Command>(bool once = false, bool replace = false)
+    public virtual ICommandBinding BindCommand<Signal, Command>(bool once = false, bool replace = false)
     {
         ICommandBinding binding = null;
         try
@@ -99,7 +179,7 @@ public class SimpleContext : MVCSContext
         return binding;
     }
 
-    protected virtual ICommandBinding BindCommand<Command>(object key, bool once = false)
+    public virtual ICommandBinding BindCommand<Command>(object key, bool once = false)
     {
         ICommandBinding binding = commandBinder.Bind(key).To<Command>();
         if (once)
@@ -107,7 +187,7 @@ public class SimpleContext : MVCSContext
         return binding;
     }
 
-    protected virtual IInjectionBinding Bind<Type>(bool singleton = false, bool crosscontext = false)
+    public virtual IInjectionBinding Bind<Type>(bool singleton = false, bool crosscontext = false)
     {
         IInjectionBinding binding = injectionBinder.Bind<Type>();
         if (singleton)

@@ -1,1 +1,0 @@
-﻿using SimpleAction = UnityEngine.Events.UnityAction;
